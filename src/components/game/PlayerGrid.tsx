@@ -27,7 +27,7 @@ export default function PlayerGrid({ players, currentPlayerId, phase, onAction, 
             if (myRole === 'WEREWOLF') return <Skull className="w-6 h-6 text-red-500" />;
             if (myRole === 'SEER') return <Eye className="w-6 h-6 text-blue-400" />;
             if (myRole === 'DOCTOR') return <Shield className="w-6 h-6 text-green-400" />;
-            if (myRole === 'WITCH') return <Shield className="w-6 h-6 text-purple-400" />;
+            if (myRole === 'WITCH') return <Skull className="w-6 h-6 text-purple-400" />;
         }
         if (phase === 'DAY_VOTE') return <Footprints className="w-6 h-6 text-yellow-500" />; // Vote icon
         if (myRole === 'AVENGER') return <Skull className="w-6 h-6 text-orange-500" />;
@@ -52,14 +52,6 @@ export default function PlayerGrid({ players, currentPlayerId, phase, onAction, 
         return false;
     };
 
-    const handleWitchAction = (targetId: string, action: 'HEAL' | 'POISON') => {
-        if (action === 'POISON') {
-            onAction(`POISON:${targetId}`);
-        } else {
-            console.log("Heal logic handled by top button");
-        }
-    };
-
     return (
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
 
@@ -74,6 +66,7 @@ export default function PlayerGrid({ players, currentPlayerId, phase, onAction, 
                     >
                         Heal Victim
                     </button>
+                    <p className="text-xs text-gray-400 mt-2">To Poison, click on a player below.</p>
                 </div>
             )}
 
@@ -89,8 +82,8 @@ export default function PlayerGrid({ players, currentPlayerId, phase, onAction, 
                         onClick={() => {
                             if (interactable) {
                                 if (phase === 'NIGHT' && myRole === 'WITCH') {
-                                    // Default click is Poison for Witch grid
-                                    if (confirm(`Do you want to POISON ${player.name}?`)) {
+                                    // Witch Poison Logic
+                                    if (confirm(`Do you want to POISON ${player.name}? This action cannot be undone.`)) {
                                         onAction(`POISON:${player.id}`);
                                     }
                                 } else {

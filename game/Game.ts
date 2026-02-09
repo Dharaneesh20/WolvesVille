@@ -13,6 +13,8 @@ export class Game {
     public players: Map<string, Player> = new Map(); // socketId -> Player
     public phase: GamePhase = 'LOBBY';
     public phaseTimer: number = 0;
+    public dayCount: number = 1;
+    public lastRoundResult: string[] = []; // Array of messages for the summary
 
     // Host Settings
     public settings = {
@@ -113,27 +115,61 @@ export class Game {
     }
 
     private resolveNightActions() {
-        const targetId = this.nightActions.werewolfTarget; // Who wolves wanted to kill
+        const targetId = this.nightActions.werewolfTarget;
         const protectedId = this.nightActions.doctorTarget;
         const witchHeal = this.nightActions.witchHeal;
         const witchPoisonId = this.nightActions.witchPoison;
 
+        const summary: string[] = [`Night ${this.dayCount} ended.`];
+        let deadCount = 0;
+
         // 1. Resolve Werewolf Attack
         if (targetId) {
             let isSaved = false;
-            if (targetId === protectedId) isSaved = true;
-            if (witchHeal) isSaved = true;
+            // Doctor saves
+            if (targetId === protectedId) {
+                isSaved = true;
+            }
+            // Witch saves
+            if (witchHeal) {
+                // If Witch heals, they use their potion. 
+                // Note: Logic in castVote already consumed the potion flag, 
+                // but we should verify if targetId matches what witch saw/healed? 
+                // Simplified: if witchHeal is true, it means they clicked "Heal Victim", so it saves the wolf target.
+                isSaved = true;
+            }
 
             if (!isSaved) {
-                this.killPlayer(targetId);
+                const victim = this.players.get(targetId);
+                if (victim && victim.isAlive) {
+                    this.killPlayer(targetId);
+                    summary.push(`${victim.name} was killed by Werewolves.`);
+                    deadCount++;
+                }
+            } else {
+                // Saved!
+                // summary.push("Someone was attacked but saved."); // Optional info
             }
+        } else {
+            summary.push("The Werewolves did not attack anyone.");
         }
 
         // 2. Resolve Witch Poison
         if (witchPoisonId) {
-            // Cannot be saved by doctor (usually rules say doctor only heals wolf attacks)
-            this.killPlayer(witchPoisonId);
+            const victim = this.players.get(witchPoisonId);
+            if (victim && victim.isAlive) {
+                this.killPlayer(witchPoisonId);
+                summary.push(`${victim.name} died mysteriously.`);
+                deadCount++;
+            }
         }
+
+        if (deadCount === 0 && targetId) {
+            summary.push("No one died last night.");
+        }
+
+        this.lastRoundResult = summary;
+        this.dayCount++;
 
         // Reset Actions
         this.nightActions = { werewolfTarget: null, doctorTarget: null, seerCheck: null, witchHeal: false, witchPoison: null };
@@ -280,25 +316,39 @@ export class Game {
         const skipCount = this.skipVotes.size;
         let maxVotes = 0;
         let targetToDie: string | null = null;
+        let isTie = false;
 
         voteCounts.forEach((count, targetId) => {
             if (count > maxVotes) {
                 maxVotes = count;
                 targetToDie = targetId;
+                isTie = false;
             } else if (count === maxVotes) {
                 targetToDie = null; // Tie
+                isTie = true;
             }
         });
 
+        const summary: string[] = [`Day ${this.dayCount} voting results:`];
+
         // Skip Replaces Death if Skip >= Max Votes
         if (skipCount >= maxVotes && skipCount > 0) {
-            // Skipped
+            summary.push("The village decided to skip voting.");
+            this.lastRoundResult = summary;
             return;
         }
 
-        if (targetToDie) {
-            this.killPlayer(targetToDie);
+        if (isTie || !targetToDie) {
+            summary.push("The vote was a tie. No one was executed.");
+        } else {
+            const victim = this.players.get(targetToDie);
+            if (victim) {
+                this.killPlayer(targetToDie);
+                summary.push(`${victim.name} was executed by the village.`);
+            }
         }
+
+        this.lastRoundResult = summary;
     }
 
     checkWinCondition() {
@@ -333,6 +383,8 @@ export class Game {
             timer: this.phaseTimer,
             settings: this.settings,
             winner: this.winner,
+            dayCount: this.dayCount,
+            lastRoundResult: this.lastRoundResult,
             // Night Action Info (Role specific)
             nightInfo: (this.phase === 'NIGHT') ? {
                 // Witch sees victim

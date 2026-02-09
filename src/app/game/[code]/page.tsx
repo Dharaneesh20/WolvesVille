@@ -8,6 +8,7 @@ import { Moon, Sun, Timer, Settings as SettingsIcon } from 'lucide-react';
 import PlayerGrid from '@/components/game/PlayerGrid';
 import Chat from '@/components/game/Chat';
 import GameAnimations from '@/components/game/GameAnimations';
+import RoundSummary from '@/components/game/RoundSummary';
 import SettingsModal from '@/components/game/SettingsModal';
 
 interface GameState {
@@ -20,6 +21,8 @@ interface GameState {
     role?: string; // My role
     nightInfo?: any; // Witch info
     settings?: any; // Host settings
+    dayCount: number;
+    lastRoundResult: string[];
 }
 
 export default function GamePage() {
@@ -121,6 +124,12 @@ export default function GamePage() {
                 targetName={anim.target?.name}
                 revealedRole={anim.role}
                 onComplete={() => setAnim({ type: null })}
+            />
+
+            <RoundSummary
+                result={game.lastRoundResult}
+                phase={game.phase}
+                dayCount={game.dayCount}
             />
 
             {/* Top Bar: Phase & Timer */}
