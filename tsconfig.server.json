@@ -1,16 +1,15 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "lib": ["es6", "dom"],
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
+    "module": "commonjs",
     "moduleResolution": "node",
-    "skipLibCheck": true,
-    "strict": true,
-    "outDir": "./dist"
+    "noEmit": false,
+    "isolatedModules": false
   },
-  "include": ["server.ts", "socket/**/*", "game/**/*", "lib/**/*"],
-  "exclude": ["node_modules", "src", ".next"]
+  "include": [
+    "server.ts",
+    "socket/**/*.ts",
+    "game/**/*.ts",
+    "lib/**/*.ts"
+  ]
 }

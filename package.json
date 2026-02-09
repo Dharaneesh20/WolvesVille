@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:server": "ts-node --project tsconfig.server.json server.ts",
     "lint": "eslint"
   },
   "dependencies": {

@@ -29,7 +29,7 @@ You need a hosting provider that supports long-running Node.js processes. Good o
 1.  Create a new **Web Service** on [Render](https://render.com).
 2.  Connect your GitHub repository.
 3.  **Build Command**: `npm install && npm run build` (or just `npm install` if using ts-node directly).
-4.  **Start Command**: `npx ts-node server.ts` (or compile to JS and run `node dist/server.js`).
+4.  **Start Command**: `npm run start:server` (or `npx ts-node --project tsconfig.server.json server.ts`).
     *   *Recommended*: Add a "build-server" script to package.json: `"build-server": "tsc -p tsconfig.server.json"` and start with `node dist/server.js`.
 5.  **Environment Variables**:
     *   `PORT`: `4000` (or let Render assign one and use `process.env.PORT`).
